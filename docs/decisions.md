@@ -15,3 +15,34 @@ with other Python projects.
 
 ### Outcome
 Using Python venv.
+
+## Fixed-Size Chunking Configuration
+
+### Decision
+
+The initial chunking strategy uses line-based fixed-size chunks.
+
+### Configuration
+
+- Chunk size: 40 lines
+- Overlap: 8 lines
+- Step size: 32 lines
+
+### Rationale
+
+Line-based chunking was selected because Python source code is
+organized into lines and our system needs to preserve accurate
+source-code line references.
+
+An overlap of 8 lines provides shared context between adjacent
+chunks and reduces the chance of losing context at chunk boundaries.
+
+These values are initial experimental settings, not proven
+optimal parameters.
+
+### Limitations
+
+Fixed-size chunking does not understand Python syntax or code
+structure. Functions and classes may be split across chunks.
+
+This limitation motivates the later AST-aware chunking experiment.
