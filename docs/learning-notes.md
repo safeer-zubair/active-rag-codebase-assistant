@@ -139,3 +139,60 @@ Fixed-size chunking can split functions and classes because
 it does not understand Python syntax.
 
 AST-aware chunking will be investigated in a later experiment.
+
+## AST-aware chunking: recursive definition discovery
+
+### What I implemented
+
+Used Python's `ast` module to identify classes, functions, methods, and nested functions in source code.
+
+The AST visitor now recursively traverses child nodes instead of inspecting only direct class and function bodies.
+
+### Why recursive traversal matters
+
+Python definitions can appear inside control-flow statements such as:
+
+- `if`
+- `try`
+- `for`
+- `while`
+- `with`
+
+A visitor that only checks direct children of the module, classes, and functions can miss definitions inside these structures.
+
+### Metadata improvements
+
+Each definition stores:
+
+- Symbol name
+- Qualified name
+- Symbol type
+- Parent symbol
+- Start and end line
+- Enclosing control-flow context
+
+Control-flow context is stored separately from the qualified name because a condition such as `TYPE_CHECKING` is not part of a definition's lexical name.
+
+### Real repository validation
+
+Tested against the Requests repository:
+
+- Python files loaded: 20
+- AST chunks created: 349
+- Classes: 52
+- Functions: 83
+- Methods: 177
+- Nested functions: 8
+- Module chunks: 29
+
+Verified that six classes inside the `if TYPE_CHECKING` block in `src/requests/_types.py` are now extracted individually.
+
+### Testing
+
+All 28 automated tests passed.
+
+### Important observation
+
+AST-aware chunking still produces oversized chunks. Large classes and methods may contain hundreds of lines.
+
+More chunks do not automatically mean better retrieval. Retrieval quality must be evaluated separately.
