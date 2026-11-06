@@ -50,7 +50,7 @@ def main():
 
             break
 
-        print("\nAll chunks from sessions.py:")
+    print("\nAll chunks from sessions.py:")
 
     for chunk in chunks:
         if chunk["file_path"].endswith("sessions.py"):

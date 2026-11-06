@@ -196,3 +196,21 @@ All 28 automated tests passed.
 AST-aware chunking still produces oversized chunks. Large classes and methods may contain hundreds of lines.
 
 More chunks do not automatically mean better retrieval. Retrieval quality must be evaluated separately.
+
+## AST-aware chunking
+
+- Learned how Python's Abstract Syntax Tree represents code.
+- Used ast.parse() to inspect Python source code.
+- Extracted classes, functions, methods, and nested functions.
+- Preserved qualified names and source line numbers.
+- Created class overview chunks separately from method implementations.
+- Extracted module-level code while avoiding duplicated definitions.
+- Handled decorators and one-line class definitions.
+- Tested AST chunking with automated pytest tests.
+
+## Requests repository inspection
+
+- Python files loaded: 20
+- AST chunks created: 349
+- Average chunk size: approximately 17 lines
+- Largest chunk: 145 lines

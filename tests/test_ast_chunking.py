@@ -11,7 +11,6 @@ def test_extract_function_source():
     tree = ast.parse(source_code)
 
     function_node = tree.body[0]
-
     result = extract_source_segment(
         source_code,
         function_node
@@ -402,3 +401,121 @@ except ImportError:
 
     assert "OptionalFeature" in names
     assert "fallback" in names
+
+from src.ast_chunking import extract_class_overview
+
+def test_class_overview_contains_docstring():
+    source_code = '''
+class UserService:
+    """Handles user operations."""
+
+    def create_user(self):
+        return "Created"
+'''
+
+    overview = extract_class_overview(
+        source_code,
+        ast.parse(source_code).body[0],
+    )
+
+    assert "class UserService:" in overview
+    assert "Handles user operations." in overview
+
+
+def test_class_overview_excludes_methods():
+    source_code = '''
+class UserService:
+    """Handles user operations."""
+
+    def create_user(self):
+        return "Created"
+'''
+
+    overview = extract_class_overview(
+        source_code,
+        ast.parse(source_code).body[0],
+    )
+
+    assert "def create_user" not in overview
+    assert 'return "Created"' not in overview
+
+
+
+def test_method_chunk_keeps_implementation():
+    source_code = '''
+class UserService:
+    def create_user(self):
+        return "Created"
+'''
+
+    file_data = {
+        "file_path": "users.py",
+        "content": source_code,
+    }
+
+    chunks = create_ast_chunks(file_data)
+
+    method_chunk = next(
+        chunk for chunk in chunks
+        if chunk["qualified_name"] == "UserService.create_user"
+    )
+
+    assert "def create_user" in method_chunk["content"]
+    assert 'return "Created"' in method_chunk["content"]
+
+def test_module_chunk_preserves_source_line_positions():
+    source_code = (
+        "if TYPE_CHECKING:\n"
+        "    import typing\n"
+        "\n"
+        "    class User:\n"
+        "        pass\n"
+        "\n"
+        "    API_VERSION = 2\n"
+    )
+
+    file_data = {
+        "file_path": "example.py",
+        "content": source_code,
+    }
+
+    chunks = create_ast_chunks(file_data)
+
+    module_chunk = next(
+        chunk for chunk in chunks
+        if chunk["symbol_type"] == "module"
+    )
+
+    original_lines = source_code.splitlines()
+
+    chunk_lines = module_chunk["content"].splitlines()
+
+    assert len(chunk_lines) == (
+        module_chunk["end_line"]
+        - module_chunk["start_line"]
+        + 1
+    )
+
+    assert "import typing" in module_chunk["content"]
+    assert "class User" not in module_chunk["content"]
+    assert "API_VERSION = 2" in module_chunk["content"]
+
+# Edge test case (One line classes)
+def test_one_line_class_creates_class_chunk():
+    source_code = "class Empty: pass\n"
+
+    file_data = {
+        "file_path": "example.py",
+        "content": source_code,
+    }
+
+    chunks = create_ast_chunks(file_data)
+
+    class_chunks = [
+        chunk for chunk in chunks
+        if chunk["symbol_type"] == "class"
+    ]
+
+    assert len(class_chunks) == 1
+    assert class_chunks[0]["symbol_name"] == "Empty"
+    assert "class Empty" in class_chunks[0]["content"]

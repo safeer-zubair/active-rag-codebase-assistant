@@ -164,6 +164,41 @@ def find_code_definitions(source_code: str) -> list[dict]:
         ),
     )
 
+def extract_class_overview(
+    source_code: str,
+    node: ast.ClassDef,
+) -> str:
+    """
+    Extract a class declaration, decorators,
+    inheritance and docstring without method bodies
+    """
+
+    lines = source_code.splitlines()
+    start_line = get_definition_start_line(node)
+
+    # Handle one-line class definitions
+    if node.body[0].lineno == node.lineno:
+        return "\n".join(
+            lines[start_line - 1:node.end_lineno]
+        )
+
+    class_header_end = node.body[0].lineno - 1
+    docstring = ast.get_docstring(node)
+
+    if docstring:
+        first_statement = node.body[0]
+
+        if (
+            isinstance(first_statement, ast.Expr)
+            and isinstance(first_statement.value, ast.Constant)
+            and isinstance(first_statement.value.value, str)
+        ):
+            class_header_end = first_statement.end_lineno
+
+    return "\n".join(
+        lines[start_line - 1:class_header_end]
+    )
+
 def create_ast_chunks(file_data: dict) -> list[dict]:
     """
     Create AST-aware chunks from a Python file
@@ -182,16 +217,27 @@ def create_ast_chunks(file_data: dict) -> list[dict]:
     for definition in definitions:
         node = definition["node"]
 
-        content = extract_source_segment(
-            source_code,
-            node,
-        )
+        if definition["symbol_type"] == "class":
+            content = extract_class_overview(
+                source_code,
+                node,
+            )
+        else:
+            content = extract_source_segment(
+                source_code,
+                node,
+            )
 
-        if content is None:
+        if content is None or not content.strip():
             continue
 
         start_line = definition["start_line"]
-        end_line = definition["end_line"]
+
+        if definition["symbol_type"] == "class":
+            overview_lines = content.splitlines()
+            end_line = start_line + len(overview_lines) - 1
+        else:
+            end_line = definition["end_line"]
 
         chunk = {
             "chunk_id": (
@@ -234,47 +280,87 @@ def get_definition_start_line(node: ast.AST) -> int:
 
     return start_line
 
+def contains_code_definition(node: ast.AST) -> bool:
+    """
+    Check whether a statement contains a class
+    or function definition
+    """
+
+    definition_types = (
+        ast.ClassDef,
+        ast.FunctionDef,
+        ast.AsyncFunctionDef,
+    )
+
+    for child in ast.walk(node):
+        if isinstance(child, definition_types):
+            return True
+
+    return False
+
 def create_module_chunks(
     source_code: str,
     file_path: str,
 ) -> list[dict]:
     """
-    Extract consecutive module-level statements
-    that are outside classes and functions
+    Extract module-level code without duplicating
+    separately extracted class and function definitions
     """
 
     tree = ast.parse(source_code)
     lines = source_code.splitlines()
 
-    module_nodes = [
-        node
-        for node in tree.body
-        if not isinstance(
-            node,
-            (
-                ast.ClassDef,
-                ast.FunctionDef,
-                ast.AsyncFunctionDef,
-            ),
-        )
-    ]
-
-    if not module_nodes:
-        return []
+    definition_types = (
+        ast.ClassDef,
+        ast.FunctionDef,
+        ast.AsyncFunctionDef,
+    )
 
     chunks = []
-    current_group = []
+
+    def get_clean_source(nodes) -> tuple[int, int, str]:
+        """
+        Extract module source while blanking separately
+        extracted class and function definitions
+
+        Preserve original line positions
+        """
+
+        start_line = nodes[0].lineno
+        end_line = nodes[-1].end_lineno
+
+        content_lines = lines[start_line - 1:end_line].copy()
+
+        for root_node in nodes:
+            for child in ast.walk(root_node):
+
+                if isinstance(child, definition_types):
+                    definition_start = get_definition_start_line(child)
+                    definition_end = child.end_lineno
+
+                    for line_number in range(
+                        definition_start,
+                        definition_end + 1,
+                    ):
+                        index = line_number - start_line
+
+                        if 0 <= index < len(content_lines):
+                            content_lines[index] = ""
+
+        return (
+            start_line,
+            end_line,
+            "\n".join(content_lines),
+        )
 
     def save_group(nodes):
         if not nodes:
             return
 
-        start_line = nodes[0].lineno
-        end_line = nodes[-1].end_lineno
+        start_line, end_line, content = get_clean_source(nodes)
 
-        content = "\n".join(
-            lines[start_line - 1:end_line]
-        )
+        if not content.strip():
+            return
 
         chunks.append({
             "chunk_id": f"{file_path}:module:{start_line}-{end_line}",
@@ -287,27 +373,14 @@ def create_module_chunks(
             "content": content,
         })
 
-    for node in module_nodes:
-        if current_group:
-            previous_node = current_group[-1]
+    current_group = []
 
-            has_definition_between = any(
-                isinstance(
-                    intervening_node,
-                    (
-                        ast.ClassDef,
-                        ast.FunctionDef,
-                        ast.AsyncFunctionDef,
-                    ),
-                )
-                and previous_node.end_lineno < intervening_node.lineno
-                and intervening_node.end_lineno < node.lineno
-                for intervening_node in tree.body
-            )
+    for node in tree.body:
 
-            if has_definition_between:
-                save_group(current_group)
-                current_group = []
+        if isinstance(node, definition_types):
+            save_group(current_group)
+            current_group = []
+            continue
 
         current_group.append(node)
 

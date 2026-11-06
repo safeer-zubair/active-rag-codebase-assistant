@@ -58,3 +58,23 @@ This limitation motivates the later AST-aware chunking experiment.
 **Validation:** Six previously missed classes in Requests' `_types.py` were successfully extracted. The test suite passed all 28 tests.
 
 **Trade-off:** Recursive discovery improves definition coverage, but AST-aware chunks can still be very large. Oversized-chunk handling remains a separate improvement.
+
+## AST-aware chunking design
+
+Decision:
+Use Python's built-in ast module to identify
+classes, functions, methods, and nested functions.
+
+Reasons:
+- Understands Python syntax rather than relying on regex.
+- Preserves source line information.
+- Allows retrieval using meaningful code structures.
+- Supports metadata such as symbol names and parent classes.
+
+Trade-offs:
+- Large methods may still require further splitting.
+- Module-level control-flow blocks can produce large chunks.
+- AST parsing is language-specific.
+
+Testing:
+All 33 automated tests passed.
