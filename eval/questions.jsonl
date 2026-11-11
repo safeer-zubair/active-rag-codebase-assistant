@@ -1,0 +1,10 @@
+{"id":"Q01","question":"Where does Requests follow HTTP redirects?","relevant_symbols":["SessionRedirectMixin.resolve_redirects"]}
+{"id":"Q02","question":"Which method sends a prepared HTTP request through urllib3?","relevant_symbols":["HTTPAdapter.send"]}
+{"id":"Q03","question":"Where is a Request object converted into a PreparedRequest before sending?","relevant_symbols":["Session.prepare_request","Request.prepare"]}
+{"id":"Q04","question":"Where does a Session send a prepared request and receive the response?","relevant_symbols":["Session.send","HTTPAdapter.send"]}
+{"id":"Q05","question":"Which method determines the URL to use when connecting through an HTTP proxy?","relevant_symbols":["HTTPAdapter.request_url"]}
+{"id":"Q06","question":"Where are authentication credentials removed when redirecting to another host?","relevant_symbols":["SessionRedirectMixin.rebuild_auth","SessionRedirectMixin.should_strip_auth"]}
+{"id":"Q07","question":"Where does Requests construct a Response object from the underlying HTTP response?","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"Q08","question":"Which method prepares the URL, headers and body of an outgoing HTTP request?","relevant_symbols":["PreparedRequest.prepare","PreparedRequest.prepare_url","PreparedRequest.prepare_headers","PreparedRequest.prepare_body"]}
+{"id":"Q09","question":"Where does a Session choose the HTTP adapter responsible for handling a URL?","relevant_symbols":["Session.get_adapter"]}
+{"id":"Q10","question":"Where are cookies extracted from an HTTP response and stored in a Session?","relevant_symbols":["Session.send","extract_cookies_to_jar"]}

@@ -214,3 +214,85 @@ More chunks do not automatically mean better retrieval. Retrieval quality must b
 - AST chunks created: 349
 - Average chunk size: approximately 17 lines
 - Largest chunk: 145 lines
+
+## Hybrid retrieval — diagnostic experiment
+
+- Implemented BM25 lexical retrieval.
+- Combined BM25 and dense retrieval using Reciprocal Rank Fusion.
+- Used the same 349 AST chunks for both retrieval systems.
+- Used top-10 results from each retriever.
+- Used RRF with k=60.
+
+### Observations
+
+- Hybrid retrieval successfully combines results from both systems.
+- BM25 can recover relevant chunks missed by vector retrieval.
+- Agreement between retrievers does not guarantee relevance.
+- Exact identifier searches remain challenging.
+- Related methods can outrank the actual implementation.
+- The main redirect implementation was not retrieved in the top 10.
+
+### Conclusion
+
+The hybrid retrieval pipeline works, but its retrieval
+quality must be measured using a larger benchmark.
+
+## First retrieval evaluation
+
+Dataset:
+- 10 developer questions
+- 349 AST chunks
+- 20 Python files
+
+Retrieval configuration:
+- Vector: MiniLM + ChromaDB
+- BM25: rank_bm25
+- Hybrid: Reciprocal Rank Fusion
+- RRF constant: 60
+- Retrieval cutoff: top 10
+
+Results:
+
+| Method | Recall@3 | Recall@5 | MRR |
+|---|---:|---:|---:|
+| Vector | 0.3750 | 0.4750 | 0.4658 |
+| BM25 | 0.5000 | 0.5500 | 0.4042 |
+| Hybrid | 0.5000 | 0.5000 | 0.5100 |
+
+Observations:
+- BM25 achieved the highest Recall@5.
+- Hybrid achieved the highest MRR.
+- Hybrid did not outperform BM25 on every metric.
+- Lexical and semantic retrieval have complementary behaviour.
+
+Conclusion:
+No single retrieval method dominates all metrics
+in this initial benchmark.
+
+## Retrieval evaluation — question-level analysis
+
+### Vector retrieval
+- Strong performance on Q01 and Q08.
+- Retrieved relevant code for semantic and behavioural questions.
+- Failed on some exact implementation lookups.
+
+### BM25 retrieval
+- Strong performance on Q02.
+- Performed well on Q05, Q06, Q07 and Q09.
+- Struggled with Q01, Q03 and Q08.
+
+### Hybrid retrieval
+- Achieved the highest overall MRR.
+- Improved some questions compared with vector-only retrieval.
+- Did not consistently improve Recall@5.
+- Sometimes moved relevant results lower in the ranking.
+
+### Important failure cases
+- Q02: Hybrid ranked the relevant result lower than BM25.
+- Q04: All three systems struggled with multi-method request flow.
+- Q08: All systems failed to retrieve most expected preparation methods.
+
+### Conclusion
+Dense and lexical retrieval provide complementary signals.
+RRF improves some ranking outcomes but does not guarantee
+better retrieval coverage.
