@@ -3,7 +3,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
 from src.vector_store import create_vector_store, search_collection
-from src.hybrid_retreival import build_bm25_index, search_bm25, reciprocal_rank_fusion
+from src.hybrid_retreival import build_bm25_index, search_bm25, reciprocal_rank_fusion, search_exact_symbol
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 TOP_K = 10
@@ -69,6 +69,12 @@ def main():
         top_k=TOP_K,
     )
 
+    exact_results = search_exact_symbol(
+        bm25_index,
+        query,
+        top_k=10,
+    )
+
     # Debugging snippet (Data type mismatch issue)
     # print("\nDEBUG - Vector result ID:")
     # print(vector_results[0]["chunk_id"])
@@ -83,8 +89,15 @@ def main():
     hybrid_results = reciprocal_rank_fusion(
         vector_results,
         bm25_results,
+        exact_results=exact_results,
         k=60,
     )
+
+    # Printing the results before the final display for debugging purposes
+    print(f"\nVector results: {len(vector_results)}")
+    print(f"BM25 results: {len(bm25_results)}")
+    print(f"Exact matches: {len(exact_results)}")
+    print(f"Fused results: {len(hybrid_results)}")
 
     # 5. Display the final rankings
     print("\n" + "=" * 65)
@@ -107,7 +120,9 @@ def main():
 
         print("\n" + "-" * 65)
         print(f"Final rank: {position}")
-        print(f"RRF score: {result['rrf_score']:.6f}")
+        print(f"Ranks: {result['ranks']}")
+        print(f"Exact match: {result.get('exact_match', False)}")
+        print(f"RRF score: {result['rrf_score']:.5f}")
         print(f"Vector rank: {vector_rank}")
         print(f"BM25 rank: {bm25_rank}")
         print(f"File: {metadata['file_path']}")

@@ -1,4 +1,3 @@
-
 import pytest
 
 from src.evaluation import (
@@ -6,6 +5,8 @@ from src.evaluation import (
     reciprocal_rank,
     evaluate_query,
     aggregate_metrics,
+    rank_at_one,
+    aggregate_category_metrics,
 )
 
 
@@ -83,3 +84,54 @@ def test_empty_relevant_symbols():
 def test_empty_aggregate_results():
     with pytest.raises(ValueError):
         aggregate_metrics([])
+
+
+# Unified benchmarking dataset evalv
+def test_rank_at_one_correct_symbol():
+    assert rank_at_one(
+        ["HTTPAdapter.send", "Session.send"],
+        ["HTTPAdapter.send"],
+    ) == 1.0
+
+
+def test_rank_at_one_incorrect_symbol():
+    assert rank_at_one(
+        ["Session", "HTTPAdapter.send"],
+        ["HTTPAdapter.send"],
+    ) == 0.0
+
+
+def test_rank_at_one_empty_results():
+    assert rank_at_one(
+        [],
+        ["HTTPAdapter.send"],
+    ) == 0.0
+
+
+def test_category_aggregation():
+    detailed_results = [
+        {
+            "category": "exact_identifier",
+            "method": "wrrf",
+            "recall@3": 1.0,
+            "recall@5": 1.0,
+            "mrr": 1.0,
+            "rank@1": 1.0,
+        },
+        {
+            "category": "exact_identifier",
+            "method": "wrrf",
+            "recall@3": 0.0,
+            "recall@5": 1.0,
+            "mrr": 0.5,
+            "rank@1": 0.0,
+        },
+    ]
+
+    results = aggregate_category_metrics(detailed_results)
+
+    assert len(results) == 1
+    assert results[0]["category"] == "exact_identifier"
+    assert results[0]["method"] == "wrrf"
+    assert results[0]["question_count"] == 2
+    assert results[0]["rank@1"] == 0.5

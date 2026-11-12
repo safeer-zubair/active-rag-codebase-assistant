@@ -1,4 +1,5 @@
 import re
+import pytest
 from rank_bm25 import BM25Okapi
 
 def tokenize_code(text: str) -> list[str]:
@@ -75,22 +76,44 @@ def search_bm25(index: dict, query: str, top_k: int = 5) -> list[dict]:
 def reciprocal_rank_fusion(
         vector_results: list[dict],
         bm25_results: list[dict],
-        k: int = 60
+        k: int = 60,
+        exact_results: list[dict] | None = None,
+        vector_weight: float = 1.0,
+        bm25_weight: float = 1.0,
+        exact_weight: float = 3.0,
 ) -> list[dict]:
     if k <= 0:
         raise ValueError("k must be a positive integer.")
+
+    weights ={
+        "vector": vector_weight,
+        "bm25": bm25_weight,
+        "exact": exact_weight,
+    }
+
+    if any(weight < 0 for weight in weights.values()):
+        raise ValueError("Weights must be non-negative.")
+
+    if not any(weight > 0 for weight in weights.values()):
+        raise ValueError("At least one weight should be greater than zero.")
 
     fused_results = {}
 
     ranking_systems = [
         ("vector", vector_results),
-        ("bm25", bm25_results)
+        ("bm25", bm25_results),
+        ("exact", exact_results or []),
     ]
 
     for system_name, results in ranking_systems:
+
+        weight = weights[system_name]
+
+        if weight == 0:
+            continue
+
         for rank, result in enumerate(results, start=1):
             chunk_id = result["chunk_id"]
-            score = 1 / (rank + 1)
 
             if chunk_id not in fused_results:
                 fused_results[chunk_id] = {
@@ -103,7 +126,7 @@ def reciprocal_rank_fusion(
 
             entry = fused_results[chunk_id]
 
-            entry["rrf_score"] += 1 / (k + rank)
+            entry["rrf_score"] += weight / (k + rank)
 
             entry["ranks"][system_name] = rank
 
@@ -115,8 +138,45 @@ def reciprocal_rank_fusion(
             elif system_name == "bm25":
                 entry["bm25_score"] = result.get("score")
 
+            elif system_name == "exact":
+                entry["exact_match"] = True
+
     return sorted(
         fused_results.values(),
         key=lambda item: item["rrf_score"],
         reverse=True,
     )
+
+def extract_qualified_identifiers(query: str) -> list[str]:
+    pattern = r"\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+\b"
+    return re.findall(pattern, query)
+
+def search_exact_symbol(
+        index: dict,
+        query: str,
+        top_k: int =5,
+) -> list[str]:
+
+    if top_k <= 0:
+        raise ValueError("top_k must be a positive integer.")
+
+    identifiers = extract_qualified_identifiers(query)
+
+    if not identifiers:
+        return []
+
+    results = []
+
+    for identifier in identifiers:
+
+        for i, metadata in enumerate(index["metadatas"]):
+            if metadata.get("qualified_name") == identifier:
+                results.append({
+                    "chunk_id": index["ids"][i],
+                    "document": index["documents"][i],
+                    "metadata": metadata,
+                    "score": 1.0,
+                    "exact_match": True,
+                })
+
+    return results[:top_k]

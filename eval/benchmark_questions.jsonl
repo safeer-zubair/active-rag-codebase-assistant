@@ -1,0 +1,41 @@
+
+{"id":"Q01","category":"natural_language","question":"Where does Requests follow HTTP redirects?","relevant_symbols":["SessionRedirectMixin.resolve_redirects"]}
+{"id":"Q02","category":"natural_language","question":"How does a Session send an HTTP request and receive a response?","relevant_symbols":["Session.request","Session.send"]}
+{"id":"Q03","category":"natural_language","question":"Where are authentication credentials removed when redirecting to another host?","relevant_symbols":["SessionRedirectMixin.rebuild_auth","SessionRedirectMixin.should_strip_auth"]}
+{"id":"Q04","category":"natural_language","question":"How does Requests choose which HTTP adapter handles a URL?","relevant_symbols":["Session.get_adapter"]}
+{"id":"Q05","category":"natural_language","question":"Where is a Request object converted into a prepared request?","relevant_symbols":["Request.prepare","Session.prepare_request"]}
+{"id":"Q06","category":"natural_language","question":"How does Requests construct a response from the underlying HTTP response?","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"Q07","category":"natural_language","question":"Where does Requests determine the URL used when connecting through a proxy?","relevant_symbols":["HTTPAdapter.request_url"]}
+{"id":"Q08","category":"natural_language","question":"How are cookies extracted from an HTTP response and stored in a Session?","relevant_symbols":["Session.send","extract_cookies_to_jar"]}
+{"id":"Q09","category":"natural_language","question":"Where does Requests prepare the headers and body of an outgoing request?","relevant_symbols":["PreparedRequest.prepare_headers","PreparedRequest.prepare_body"]}
+{"id":"Q10","category":"natural_language","question":"How does Requests configure the environment settings before sending a request?","relevant_symbols":["Session.merge_environment_settings"]}
+{"id":"Q11","category":"natural_language","question":"Where does the library decide whether a redirect response should be followed?","relevant_symbols":["SessionRedirectMixin.get_redirect_target","SessionRedirectMixin.resolve_redirects"]}
+{"id":"Q12","category":"natural_language","question":"How does Requests change the HTTP method when following a redirect?","relevant_symbols":["SessionRedirectMixin.rebuild_method"]}
+{"id":"Q13","category":"exact_identifier","question":"Where is HTTPAdapter.send implemented?","relevant_symbols":["HTTPAdapter.send"]}
+{"id":"Q14","category":"exact_identifier","question":"Explain Session.get_adapter","relevant_symbols":["Session.get_adapter"]}
+{"id":"Q15","category":"exact_identifier","question":"Where is SessionRedirectMixin.resolve_redirects defined?","relevant_symbols":["SessionRedirectMixin.resolve_redirects"]}
+{"id":"Q16","category":"exact_identifier","question":"Find HTTPAdapter.build_response","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"Q17","category":"exact_identifier","question":"Where is Session.prepare_request implemented?","relevant_symbols":["Session.prepare_request"]}
+{"id":"Q18","category":"exact_identifier","question":"Explain PreparedRequest.prepare_url","relevant_symbols":["PreparedRequest.prepare_url"]}
+{"id":"Q19","category":"exact_identifier","question":"Find SessionRedirectMixin.rebuild_auth","relevant_symbols":["SessionRedirectMixin.rebuild_auth"]}
+{"id":"Q20","category":"exact_identifier","question":"Where is HTTPAdapter.request_url defined?","relevant_symbols":["HTTPAdapter.request_url"]}
+{"id":"Q21","category":"exact_identifier","question":"Show the implementation of Session.merge_environment_settings","relevant_symbols":["Session.merge_environment_settings"]}
+{"id":"Q22","category":"exact_identifier","question":"Find PreparedRequest.prepare_headers","relevant_symbols":["PreparedRequest.prepare_headers"]}
+{"id":"Q23","category":"mixed","question":"Explain how Session.send handles cookies after receiving a response.","relevant_symbols":["Session.send","extract_cookies_to_jar"]}
+{"id":"Q24","category":"mixed","question":"Where does HTTPAdapter.send pass a prepared request to the underlying HTTP connection?","relevant_symbols":["HTTPAdapter.send"]}
+{"id":"Q25","category":"mixed","question":"Explain how SessionRedirectMixin.rebuild_auth handles authentication during redirects.","relevant_symbols":["SessionRedirectMixin.rebuild_auth","SessionRedirectMixin.should_strip_auth"]}
+{"id":"Q26","category":"mixed","question":"How does Session.prepare_request use Request.prepare before sending a request?","relevant_symbols":["Session.prepare_request","Request.prepare"]}
+{"id":"Q27","category":"mixed","question":"Explain how PreparedRequest.prepare_url processes the URL of an outgoing request.","relevant_symbols":["PreparedRequest.prepare_url"]}
+{"id":"Q28","category":"mixed","question":"Where does HTTPAdapter.build_response convert the urllib3 response into a Requests response?","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"Q29","category":"mixed","question":"How does Session.get_adapter select an adapter based on the request URL?","relevant_symbols":["Session.get_adapter"]}
+{"id":"Q30","category":"mixed","question":"Explain how SessionRedirectMixin.resolve_redirects uses get_redirect_target.","relevant_symbols":["SessionRedirectMixin.resolve_redirects","SessionRedirectMixin.get_redirect_target"]}
+{"id":"Q31","category":"mixed","question":"How does PreparedRequest.prepare_body handle the body of an outgoing HTTP request?","relevant_symbols":["PreparedRequest.prepare_body"]}
+{"id":"Q32","category":"mixed","question":"Explain how Session.mount changes the adapter used for a particular URL prefix.","relevant_symbols":["Session.mount"]}
+{"id":"Q33","category":"vague","question":"What happens after a server responds with a redirect?","relevant_symbols":["SessionRedirectMixin.get_redirect_target","SessionRedirectMixin.resolve_redirects"]}
+{"id":"Q34","category":"vague","question":"How does the library decide which component should handle a network request?","relevant_symbols":["Session.get_adapter","Session.send"]}
+{"id":"Q35","category":"vague","question":"What happens to login credentials when a request is redirected to a different website?","relevant_symbols":["SessionRedirectMixin.should_strip_auth","SessionRedirectMixin.rebuild_auth"]}
+{"id":"Q36","category":"vague","question":"How does the library turn a high-level request into something that can be transmitted over HTTP?","relevant_symbols":["Request.prepare","Session.prepare_request","PreparedRequest.prepare"]}
+{"id":"Q37","category":"vague","question":"What happens to cookies when the server sends a response?","relevant_symbols":["Session.send","extract_cookies_to_jar"]}
+{"id":"Q38","category":"vague","question":"How does the library decide what address to use when communicating through a proxy?","relevant_symbols":["HTTPAdapter.request_url"]}
+{"id":"Q39","category":"vague","question":"How does the library transform the low-level network response into an object that developers can use?","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"Q40","category":"vague","question":"What happens to the request configuration when the library follows a redirect?","relevant_symbols":["SessionRedirectMixin.rebuild_method","SessionRedirectMixin.rebuild_auth"]}

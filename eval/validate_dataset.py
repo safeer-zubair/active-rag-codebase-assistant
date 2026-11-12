@@ -46,7 +46,7 @@ def load_dataset(dataset_path: Path) -> list[dict]:
 def main():
     project_root = Path(__file__).resolve().parents[1]
 
-    dataset_path = project_root / "eval" / "questions.jsonl"
+    dataset_path = project_root / "eval" / "benchmark_questions.jsonl"
     repo_path = project_root / "data" / "requests"
 
     print("Loading evaluation dataset...")

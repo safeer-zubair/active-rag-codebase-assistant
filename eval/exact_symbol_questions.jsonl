@@ -1,0 +1,8 @@
+{"id":"E01","question":"Where is HTTPAdapter.send implemented?","relevant_symbols":["HTTPAdapter.send"]}
+{"id":"E02","question":"Explain Session.get_adapter","relevant_symbols":["Session.get_adapter"]}
+{"id":"E03","question":"Where is SessionRedirectMixin.resolve_redirects defined?","relevant_symbols":["SessionRedirectMixin.resolve_redirects"]}
+{"id":"E04","question":"Find HTTPAdapter.build_response","relevant_symbols":["HTTPAdapter.build_response"]}
+{"id":"E05","question":"Where is Session.prepare_request implemented?","relevant_symbols":["Session.prepare_request"]}
+{"id":"E06","question":"Explain PreparedRequest.prepare_url","relevant_symbols":["PreparedRequest.prepare_url"]}
+{"id":"E07","question":"Find SessionRedirectMixin.rebuild_auth","relevant_symbols":["SessionRedirectMixin.rebuild_auth"]}
+{"id":"E08","question":"Where is HTTPAdapter.request_url defined?","relevant_symbols":["HTTPAdapter.request_url"]}

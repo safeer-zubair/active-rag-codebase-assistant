@@ -1,4 +1,3 @@
-
 import csv
 import json
 from pathlib import Path
@@ -9,10 +8,15 @@ from src.vector_store import create_vector_store, search_collection
 from src.hybrid_retreival import (
     build_bm25_index,
     search_bm25,
+    search_exact_symbol,
     reciprocal_rank_fusion,
 )
-from src.evaluation import evaluate_query, aggregate_metrics
 
+from src.evaluation import (
+    evaluate_query,
+    aggregate_metrics,
+    aggregate_category_metrics,
+)
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 TOP_K = 10
@@ -85,8 +89,10 @@ def evaluate_retriever(
 
         vector_results = []
         bm25_results = []
+        exact_results = []
 
-        if retriever_name in ("vector", "hybrid"):
+        # 1. Vector retreival
+        if retriever_name in ("vector", "rrf", "rrf_equal", "wrrf"):
             query_embedding = model.encode(
                 query,
                 convert_to_numpy=True,
@@ -103,26 +109,77 @@ def evaluate_retriever(
                 raw_vector_results
             )
 
-        if retriever_name in ("bm25", "hybrid"):
+
+        # 2. BM25 retreival
+        if retriever_name in ("bm25", "rrf", "rrf_equal", "wrrf"):
             bm25_results = search_bm25(
                 bm25_index,
                 query,
                 top_k=TOP_K,
             )
 
+        # 3. Exact-symbol retrieval
+        if retriever_name in ("rrf_equal", "wrrf"):
+            exact_results = search_exact_symbol(
+                bm25_index,
+                query,
+                top_k=TOP_K,
+            )
+
+            print(
+                f"{question_id} | Exact matches: {len(exact_results)}"
+            )
+
+            for result in exact_results:
+                print(
+                    "  ",
+                    result["metadata"].get("qualified_name"),
+                    result["metadata"].get("file_path"),
+                    result["metadata"].get("start_line"),
+                )
+
+        # 4. Select final retreival results
         if retriever_name == "vector":
             final_results = vector_results
 
         elif retriever_name == "bm25":
             final_results = bm25_results
 
-        else:
+        elif retriever_name == "rrf":
             final_results = reciprocal_rank_fusion(
                 vector_results,
                 bm25_results,
-                k=60,
+                k=60
             )
 
+        elif retriever_name == "rrf_equal":
+            final_results = reciprocal_rank_fusion(
+                vector_results,
+                bm25_results,
+                exact_results=exact_results,
+                k=60,
+                vector_weight=1.0,
+                bm25_weight=1.0,
+                exact_weight=1.0,
+            )
+
+        elif retriever_name == "wrrf":
+            final_results = reciprocal_rank_fusion(
+                vector_results,
+                bm25_results,
+                exact_results=exact_results,
+                k=60,
+                vector_weight=1.0,
+                bm25_weight=1.0,
+                exact_weight=3.0,
+            ) 
+
+        else:
+            raise ValueError(
+                f"Unknown retreiver: {retriever_name}"
+            )
+
+        # 5. Evaluate retreived symbols
         retrieved_symbols = extract_symbols(
             final_results[:TOP_K]
         )
@@ -136,6 +193,7 @@ def evaluate_retriever(
 
         detailed_results.append({
             "question_id": question_id,
+            "category": question["category"],
             "method": retriever_name,
             **metrics,
         })
@@ -148,11 +206,12 @@ def evaluate_retriever(
 def main():
     project_root = Path(__file__).resolve().parents[1]
 
-    dataset_path = project_root / "eval" / "questions.jsonl"
+    dataset_path = project_root / "eval" / "benchmark_questions.jsonl"
     database_path = project_root / "data" / "chroma_db"
 
     results_path = project_root / "eval" / "results.csv"
     summary_path = project_root / "eval" / "summary.csv"
+    category_summary_path = project_root / "eval" / "category_summary.csv"
 
     print("Loading evaluation questions...")
     questions = load_questions(dataset_path)
@@ -171,7 +230,15 @@ def main():
     all_detailed_results = []
     all_summaries = []
 
-    for method in ("vector", "bm25", "hybrid"):
+    methods = (
+        "vector",
+        "bm25",
+        "rrf",
+        "rrf_equal",
+        "wrrf",
+    )
+
+    for method in methods:
         print(f"\n{'=' * 50}")
         print(f"Evaluating: {method.upper()}")
         print("=" * 50)
@@ -191,12 +258,19 @@ def main():
             **summary,
         })
 
+    # Generate category-level summaries
+    category_summaries = aggregate_category_metrics(
+        all_detailed_results
+    )
+
     detailed_fields = [
         "question_id",
+        "category",
         "method",
         "recall@3",
         "recall@5",
         "mrr",
+        "rank@1",
         "first_relevant_rank",
     ]
 
@@ -205,6 +279,17 @@ def main():
         "recall@3",
         "recall@5",
         "mrr",
+        "rank@1",
+    ]
+
+    category_fields = [
+        "category",
+        "method",
+        "question_count",
+        "recall@3",
+        "recall@5",
+        "mrr",
+        "rank@1",
     ]
 
     with results_path.open(
@@ -225,6 +310,15 @@ def main():
         writer.writeheader()
         writer.writerows(all_summaries)
 
+    with category_summary_path.open(
+        "w", newline="", encoding="utf-8"
+    ) as file:
+        writer = csv.DictWriter(
+            file, fieldnames=category_fields
+        )
+        writer.writeheader()
+        writer.writerows(category_summaries)
+
     print("\n" + "=" * 50)
     print("FINAL EVALUATION")
     print("=" * 50)
@@ -234,9 +328,11 @@ def main():
         print(f"Recall@3: {result['recall@3']:.4f}")
         print(f"Recall@5: {result['recall@5']:.4f}")
         print(f"MRR:      {result['mrr']:.4f}")
+        print(f"Rank@1:   {result['rank@1']:.4f}")
 
     print("\nDetailed results saved to:", results_path)
     print("Summary saved to:", summary_path)
+    print("Category summary saved to:", category_summary_path)
 
 
 if __name__ == "__main__":
