@@ -78,3 +78,43 @@ Trade-offs:
 
 Testing:
 All 33 automated tests passed.
+
+## LLM Provider Selection
+
+Decision:
+Use Groq as the LLM inference provider, initially with
+OpenAI GPT-OSS 20B.
+
+Reasons:
+- Fast inference.
+- Structured output support.
+- Suitable for evidence assessment and query refinement.
+- OpenAI-compatible API interface.
+
+Trade-offs:
+- External API dependency.
+- API usage limits and availability.
+- Retrieved source code is sent to an external provider.
+
+## Structured LLM Assessment
+
+Decision:
+Use JSON Schema structured outputs for evidence assessment.
+
+Reasons:
+- Predictable response structure.
+- Easier integration with Python.
+- Reduces parsing ambiguity.
+
+## Assessment Validation
+
+Decision:
+Validate LLM assessments using deterministic Python rules.
+
+Reasons:
+- Prevent contradictory decisions.
+- Enforce expected field types.
+- Prevent invalid assessments from entering the retrieval pipeline.
+
+Testing:
+All 76 automated tests passed.

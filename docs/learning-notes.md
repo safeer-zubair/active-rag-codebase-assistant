@@ -296,3 +296,42 @@ in this initial benchmark.
 Dense and lexical retrieval provide complementary signals.
 RRF improves some ranking outcomes but does not guarantee
 better retrieval coverage.
+
+# 7 Design and add the evaluator architecture
+## Active Retrieval - Design
+
+- Separated retrieval from retrieval quality assessment.
+- Distinguished runtime quality assessment from benchmark evaluation.
+- Designed a structured evidence representation.
+- Planned context-aware query refinement using retrieved code.
+
+### Active Retrieval - Evidence Preparation
+
+- Created a separate retrieval quality module.
+- Prepared retrieved code chunks into structured evidence.
+- Preserved retrieval ranking, symbols, file paths and line numbers.
+- Preserved the original user query for subsequent refinement.
+
+### Deterministic Evidence Quality Assessment
+
+- Implemented deterministic evidence quality assessment.
+- Checked whether retrieval returned evidence.
+- Compared meaningful query keywords against retrieved symbols and code.
+- Calculated keyword overlap ratio.
+- Classified evidence as insufficient, weak, or candidate.
+- Added automated tests for evidence quality assessment.
+
+## LLM-powered Evidence Assessment
+
+- Integrated Groq API using the Groq Python SDK.
+- Configured API credentials using environment variables.
+- Used GPT-OSS 20B for LLM-based reasoning.
+- Implemented structured JSON output using JSON Schema.
+- Created an LLM evaluator to assess retrieved code evidence.
+- Evaluated evidence relevance and sufficiency.
+- Identified missing information and generated refined queries.
+- Added deterministic validation for LLM assessment outputs.
+- Validated field types, required fields and logical consistency.
+- Added protection instructions against prompt injection from retrieved code.
+- Tested the evaluator and validation logic.
+- All 76 automated tests passed.

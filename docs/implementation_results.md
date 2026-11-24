@@ -776,3 +776,29 @@ Future investigation:
 - Query decomposition.
 - Retrieval quality assessment.
 - Iterative retrieval and evidence comparison.
+
+## Active RAG - LLM Assessment Milestone
+
+LLM Provider: Groq
+Model: GPT-OSS 20B
+
+Implemented:
+- Groq API integration
+- Structured LLM evidence assessment
+- Relevance and sufficiency evaluation
+- Missing-information identification
+- Refined query generation
+- Deterministic assessment validation
+
+Validation:
+- 10 new assessment validation tests
+- 76 total automated tests passed
+
+Observation:
+The LLM can inspect retrieved code evidence and produce
+structured relevance assessments. Deterministic validation
+ensures that the returned assessment follows the expected
+logical rules.
+
+Note:
+Retrieval performance improvement has not yet been established.
