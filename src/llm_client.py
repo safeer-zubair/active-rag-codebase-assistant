@@ -39,7 +39,7 @@ def generate_response(prompt: str) -> str:
             }
         ],
         temperature=0.2,
-        max_completion_tokens=500,
+        max_completion_tokens=1200,
     )
 
     return response.choices[0].message.content

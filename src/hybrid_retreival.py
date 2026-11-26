@@ -1,5 +1,4 @@
 import re
-import pytest
 from rank_bm25 import BM25Okapi
 
 def tokenize_code(text: str) -> list[str]:
@@ -155,7 +154,7 @@ def search_exact_symbol(
         index: dict,
         query: str,
         top_k: int =5,
-) -> list[str]:
+) -> list[dict]:
 
     if top_k <= 0:
         raise ValueError("top_k must be a positive integer.")

@@ -32,3 +32,25 @@ accepted by the application.
 
 The evaluation benchmark remains separate from runtime
 assessment to prevent benchmark-label leakage.
+
+# Active - retreival architecture
+## Proposed json structure
+```python
+{
+    "original_query": "...",
+    "answer_evidence": [],
+    "final_assessment": {},
+    "retrieval_attempts": [
+        {
+            "attempt": 1,
+            "query": "...",
+            "retrieved_count": 10,
+            "assessment": {}
+        }
+    ],
+    "total_attempts": 1,
+    "is_sufficient": True
+}
+```
+This helps to look at how many attempts for retreiving the required evidences (maximum of 2 as proposed) and
+recording each assessment retreivals with the modified query.
